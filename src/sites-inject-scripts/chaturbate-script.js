@@ -1,4 +1,4 @@
-document.addEventListener('readystatechange', async () => {
+document.addEventListener('readystatechange', () => {
   if (document.readyState === 'interactive' && document.body.parentElement.textContent.match(/Chaturbate/gi)) {
     let windowId = parseInt(Math.random() * 100000) + '-' + parseInt(Math.random() * 100000) + '-' + parseInt(Math.random() * 100000)
       , id = 0
@@ -16,7 +16,32 @@ document.addEventListener('readystatechange', async () => {
     titleNode.innerHTML = JSON.stringify({ a: 0, b: 0 })
 
     hiddenScriptNode.type = 'text/javascript'
+    hiddenScriptNode.async = false
     hiddenScriptNode.text = `
+      const titleNode = document.querySelector('title')
+
+      let messageId = 2
+        , id = 0
+
+      const originalApply = window.Function.prototype.apply;
+      window.Function.prototype.apply = function() {
+        console.log(this.name, ...arguments)
+        try {
+          if (typeof(arguments[0].event) === 'string' && arguments[1][0].name) {
+            messageId++
+            id++
+            try {
+              titleNode.innerHTML = JSON.stringify({ ...JSON.parse(titleNode.innerHTML), a: id })
+            } catch (e) {
+              titleNode.innerHTML = JSON.stringify({ a: id, b: 0 })
+            }
+            window.postMessage({ to: 'mermaidExtensionV2', from: 'Chaturbate', socketType: 'message', data: arguments[1] }, window.origin);
+          }
+        } catch (e) {}
+
+        return originalApply.call(this, ...arguments);
+      };
+
       const hime = document.querySelector('#hidden-input-mermaid-extension')
           , hbme = document.querySelector('#hidden-button-mermaid-extension')
 
@@ -27,68 +52,6 @@ document.addEventListener('readystatechange', async () => {
           console.log('[not your room]', hime.value)
         }
       })
-
-      const titleNode = document.querySelector('title')
-
-      const proxySockJS = window.SockJS
-
-      window.SockJS = function (...args) {
-        window.instanceSockJS = proxySockJS.call(this, ...args)
-
-        let id = 0
-
-        setTimeout(() => {
-          const onmessage = window.instanceSockJS.onmessage
-          window.instanceSockJS.onmessage = function (...args) {
-            id++
-            try {
-              titleNode.innerHTML = JSON.stringify({ ...JSON.parse(titleNode.innerHTML), a: id })
-            } catch (e) {
-              titleNode.innerHTML = JSON.stringify({ a: id, b: 0 })
-            }
-            window.postMessage({ to: 'mermaidExtensionV2', from: 'Chaturbate', socketType: 'message', data: args }, window.origin)
-            onmessage.call(this, ...args)
-          }
-
-          const onerror = window.instanceSockJS.onerror
-          window.instanceSockJS.onerror = function (...args) {
-            id++
-            try {
-              titleNode.innerHTML = JSON.stringify({ ...JSON.parse(titleNode.innerHTML), a: id })
-            } catch (e) {
-              titleNode.innerHTML = JSON.stringify({ a: id, b: 0 })
-            }
-            window.postMessage({ to: 'mermaidExtensionV2', from: 'Chaturbate', socketType: 'error', data: args }, window.origin)
-            onerror.call(this, ...args)
-          }
-
-          const onclose = window.instanceSockJS.onclose
-          window.instanceSockJS.onclose = function (...args) {
-            id++
-            try {
-              titleNode.innerHTML = JSON.stringify({ ...JSON.parse(titleNode.innerHTML), a: id })
-            } catch (e) {
-              titleNode.innerHTML = JSON.stringify({ a: id, b: 0 })
-            }
-            window.postMessage({ to: 'mermaidExtensionV2', from: 'Chaturbate', socketType: 'close', data: args }, window.origin)
-            onclose.call(this, ...args)
-          }
-
-          const send = window.instanceSockJS.send
-          window.instanceSockJS.send = function (...args) {
-            id++
-            try {
-              titleNode.innerHTML = JSON.stringify({ ...JSON.parse(titleNode.innerHTML), a: id })
-            } catch (e) {
-              titleNode.innerHTML = JSON.stringify({ a: id, b: 0 })
-            }
-            window.postMessage({ to: 'mermaidExtensionV2', from: 'Chaturbate', socketType: 'send', data: args }, window.origin)
-            send.call(this, ...args)
-          }
-        }, 1)
-
-        return instanceSockJS
-      }
     `
 
     const socket = io(
@@ -144,8 +107,8 @@ document.addEventListener('readystatechange', async () => {
       }
     })
 
-    document.body.appendChild(hiddenInputNode)
-    document.body.appendChild(hiddenButtonNode)
-    document.body.appendChild(hiddenScriptNode)
+    document.body.prepend(hiddenInputNode)
+    document.body.prepend(hiddenButtonNode)
+    document.head.prepend(hiddenScriptNode)
   }
-})
+}, true)
