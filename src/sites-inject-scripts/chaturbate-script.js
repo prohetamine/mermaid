@@ -25,7 +25,6 @@ document.addEventListener('readystatechange', () => {
 
       const originalApply = window.Function.prototype.apply;
       window.Function.prototype.apply = function() {
-        console.log(this.name, ...arguments)
         try {
           if (typeof(arguments[0].event) === 'string' && arguments[1][0].name) {
             messageId++
