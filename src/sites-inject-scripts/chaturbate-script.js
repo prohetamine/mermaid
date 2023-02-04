@@ -53,58 +53,65 @@ document.addEventListener('readystatechange', () => {
       })
     `
 
-    const socket = io(
-      'http://localhost:6767?platform=Chaturbate',
-      {
-        options: {
-          reconnectionDelayMax: 10000
+    const createSocket = url => {
+      const socket = io(
+        `${url}:6767?platform=Chaturbate`,
+        {
+          options: {
+            reconnectionDelayMax: 10000
+          }
         }
-      }
-    )
+      )
 
-    socket.on('connect', async () =>
-      console.log(`[Chaturbate] Mermaid extension: chat Web Socket connected`)
-    )
+      socket.on('connect', async () =>
+        console.log(`[Chaturbate] Mermaid extension: chat Web Socket connected`)
+      )
 
-    socket.io.on('reconnect_attempt', async attempt =>
-      console.log(`[Chaturbate] Mermaid extension: chat Web Socket reconnect (${attempt})`)
-    )
+      socket.io.on('reconnect_attempt', async attempt =>
+        console.log(`[Chaturbate] Mermaid extension: chat Web Socket reconnect (${attempt})`)
+      )
 
-    socket.io.on('reconnect_failed', async () =>
-      console.log(`[Chaturbate] Mermaid extension: chat Web Socket reconnect`)
-    )
+      socket.io.on('reconnect_failed', async () =>
+        console.log(`[Chaturbate] Mermaid extension: chat Web Socket reconnect`)
+      )
 
-    socket.io.on('error', async error =>
-      console.log(`[Chaturbate] Mermaid extension: chat Web Socket error ${error}`)
-    )
+      socket.io.on('error', async error =>
+        console.log(`[Chaturbate] Mermaid extension: chat Web Socket error ${error}`)
+      )
 
-    socket.on('input', async data => {
-      if (data.platform === 'Chaturbate') {
-        hiddenInputNode.value = data.text
-        hiddenButtonNode.click()
-      }
-    })
-
-    window.addEventListener('message', event => {
-      if (window.origin === event.origin && event.data && event.data.to === 'mermaidExtensionV2') {
-        id++
-        try {
-          titleNode.innerHTML = JSON.stringify({ ...JSON.parse(titleNode.innerHTML), b: id })
-        } catch (e) {
-          titleNode.innerHTML = JSON.stringify({ a: 0, b: id })
+      socket.on('input', async data => {
+        if (data.platform === 'Chaturbate') {
+          hiddenInputNode.value = data.text
+          hiddenButtonNode.click()
         }
+      })
 
-        socket.emit('output', JSON.stringify({
-          platform: event.data.from,
-          data: event.data.data,
-          id,
-          windowId,
-          localDate: new Date() - 0,
-          modelUsername: window.location.pathname.replace(/(\/b\/|\/)/, '').slice(0, -1),
-          color: '#f47321'
-        }))
-      }
-    })
+      window.addEventListener('message', event => {
+        if (window.origin === event.origin && event.data && event.data.to === 'mermaidExtensionV2') {
+          id++
+          try {
+            titleNode.innerHTML = JSON.stringify({ ...JSON.parse(titleNode.innerHTML), b: id })
+          } catch (e) {
+            titleNode.innerHTML = JSON.stringify({ a: 0, b: id })
+          }
+
+          socket.emit('output', JSON.stringify({
+            platform: event.data.from,
+            data: event.data.data,
+            id,
+            windowId,
+            localDate: new Date() - 0,
+            modelUsername: window.location.pathname.replace(/(\/b\/|\/)/, '').slice(0, -1),
+            color: '#f47321'
+          }))
+        }
+      })
+    }
+
+    chrome.storage.local.get(
+      state =>
+        state.hosts.forEach(({ url }) => createSocket(url))
+    )
 
     document.body.prepend(hiddenInputNode)
     document.body.prepend(hiddenButtonNode)

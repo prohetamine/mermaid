@@ -1,8 +1,11 @@
 document.addEventListener('readystatechange', async () => {
+  const nodeMetaThemeColor = document.querySelector('meta[name="theme-color"]')
+
   if (
     document.readyState === 'interactive' &&
     document.body.parentElement.textContent.match(/xHamsterLive/gi) &&
-    document.querySelector('meta[name="theme-color"]').content === '#f2f2f2'
+    nodeMetaThemeColor &&
+    nodeMetaThemeColor.content === '#f2f2f2'
   ) {
     let windowId = parseInt(Math.random() * 100000) + '-' + parseInt(Math.random() * 100000) + '-' + parseInt(Math.random() * 100000)
       , id = 0
@@ -122,62 +125,69 @@ document.addEventListener('readystatechange', async () => {
       }
     `
 
-    const socket = io(
-      'http://localhost:6767?platform=xHamsterLive',
-      {
-        options: {
-          reconnectionDelayMax: 10000
+    const createSocket = url => {
+      const socket = io(
+        `${url}:6767?platform=xHamsterLive`,
+        {
+          options: {
+            reconnectionDelayMax: 10000
+          }
         }
-      }
-    )
+      )
 
-    socket.on('connect', async () =>
-      console.log(`[xHamsterLive] Mermaid extension: chat Web Socket connected`)
-    )
+      socket.on('connect', async () =>
+        console.log(`[xHamsterLive] Mermaid extension: chat Web Socket connected`)
+      )
 
-    socket.io.on('reconnect_attempt', async attempt =>
-      console.log(`[xHamsterLive] Mermaid extension: chat Web Socket reconnect (${attempt})`)
-    )
+      socket.io.on('reconnect_attempt', async attempt =>
+        console.log(`[xHamsterLive] Mermaid extension: chat Web Socket reconnect (${attempt})`)
+      )
 
-    socket.io.on('reconnect_failed', async () =>
-      console.log(`[xHamsterLive] Mermaid extension: chat Web Socket reconnect`)
-    )
+      socket.io.on('reconnect_failed', async () =>
+        console.log(`[xHamsterLive] Mermaid extension: chat Web Socket reconnect`)
+      )
 
-    socket.io.on('error', async error =>
-      console.log(`[xHamsterLive] Mermaid extension: chat Web Socket error ${error}`)
-    )
+      socket.io.on('error', async error =>
+        console.log(`[xHamsterLive] Mermaid extension: chat Web Socket error ${error}`)
+      )
 
-    socket.on('input', async data => {
-      if (data.platform === 'xHamsterLive') {
-        hiddenInputNode.value = data.text
-        hiddenButtonNode.click()
-      }
-    })
+      socket.on('input', async data => {
+        if (data.platform === 'xHamsterLive') {
+          hiddenInputNode.value = data.text
+          hiddenButtonNode.click()
+        }
+      })
 
-    window.addEventListener('message', event => {
-      if (window.origin === event.origin && event.data && event.data.to === 'mermaidExtensionV2') {
-        id++
-        try {
-          const titleNode = document.querySelector('title')
-          titleNode.innerHTML = JSON.stringify({ ...JSON.parse(titleNode.innerHTML), b: id })
-        } catch (e) {
+      window.addEventListener('message', event => {
+        if (window.origin === event.origin && event.data && event.data.to === 'mermaidExtensionV2') {
+          id++
           try {
             const titleNode = document.querySelector('title')
-            titleNode.innerHTML = JSON.stringify({ a: 0, b: id })
-          } catch (e) {}
-        }
+            titleNode.innerHTML = JSON.stringify({ ...JSON.parse(titleNode.innerHTML), b: id })
+          } catch (e) {
+            try {
+              const titleNode = document.querySelector('title')
+              titleNode.innerHTML = JSON.stringify({ a: 0, b: id })
+            } catch (e) {}
+          }
 
-        socket.emit('output', JSON.stringify({
-          platform: event.data.from,
-          data: event.data.data,
-          id,
-          windowId,
-          localDate: new Date() - 0,
-          modelUsername: window.location.pathname.replace(/\//, ''),
-          color: '#67a52c'
-        }))
-      }
-    })
+          socket.emit('output', JSON.stringify({
+            platform: event.data.from,
+            data: event.data.data,
+            id,
+            windowId,
+            localDate: new Date() - 0,
+            modelUsername: window.location.pathname.replace(/\//, ''),
+            color: '#67a52c'
+          }))
+        }
+      })
+    }
+
+    chrome.storage.local.get(
+      state =>
+        state.hosts.forEach(({ url }) => createSocket(url))
+    )
 
     document.body.appendChild(hiddenInputNode)
     document.body.appendChild(hiddenButtonNode)

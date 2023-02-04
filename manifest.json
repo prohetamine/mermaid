@@ -1,8 +1,22 @@
 {
   "name": "Mermaid",
-  "description": "Automated webcam chat reading and routing between devices and servers. Developer: https://prohetamine.ru made with ❤️",
+  "description": "Automated webcam chat reading, sending and routing between devices and servers. Developer: https://prohetamine.ru made with ❤️",
   "version": "0.1.15",
   "manifest_version": 2,
+  "browser_action": {
+    "default_popup": "src/popup/build/index.html",
+    "default_title": "Mermaid",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "scripts": ["src/backend/index.js"],
+    "persistent": false
+  },
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
