@@ -66,36 +66,7 @@ const App = () => {
 
   return (
     <Body>
-      {
-        state
-          ? (
-            <Wrapper>
-              <Hosts>
-              {
-
-                state.hosts
-                  ? (
-                    state.hosts.map(({ url, id }) =>
-                      <div key={id}>
-                        <Host
-                          type="text"
-                          value={url}
-                          key={id}
-                          onChange={({ target: { value } }) => setHostUrl(id, value)}
-                        />
-                      </div>
-                    )
-                  )
-                  : (
-                    <div>load hosts...</div>
-                  )
-              }
-              <div onClick={addNewHost}>Add host</div>
-              </Hosts>
-            </Wrapper>
-          )
-          : null
-      }
+      
     </Body>
   )
 }
