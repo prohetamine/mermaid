@@ -125,13 +125,12 @@ document.addEventListener('readystatechange', async () => {
       }
     `
 
-    const createSocket = url => {
+    const createSocket = () => {
       const socket = io(
-        `${url}:6767?platform=Stripchat`,
+        `http://localhost:6767?platform=Stripcat`,
         {
-          options: {
-            reconnectionDelayMax: 10000
-          }
+          transports: ["websocket"],
+          reconnectionDelayMax: 10000
         }
       )
 
@@ -184,10 +183,7 @@ document.addEventListener('readystatechange', async () => {
       })
     }
 
-    chrome.storage.local.get(
-      state =>
-        state.hosts.forEach(({ url }) => createSocket(url))
-    )
+    createSocket()
 
     document.body.appendChild(hiddenInputNode)
     document.body.appendChild(hiddenButtonNode)

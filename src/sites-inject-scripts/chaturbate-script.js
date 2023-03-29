@@ -53,13 +53,12 @@ document.addEventListener('readystatechange', () => {
       })
     `
 
-    const createSocket = url => {
+    const createSocket = () => {
       const socket = io(
-        `${url}:6767?platform=Chaturbate`,
+        `http://localhost:6767?platform=Chaturbate`,
         {
-          options: {
-            reconnectionDelayMax: 10000
-          }
+          transports: ["websocket"],
+          reconnectionDelayMax: 10000
         }
       )
 
@@ -75,7 +74,7 @@ document.addEventListener('readystatechange', () => {
         console.log(`[Chaturbate] Mermaid extension: chat Web Socket reconnect`)
       )
 
-      socket.io.on('error', async error =>
+      socket.io.on('error', async error => 
         console.log(`[Chaturbate] Mermaid extension: chat Web Socket error ${error}`)
       )
 
@@ -108,10 +107,7 @@ document.addEventListener('readystatechange', () => {
       })
     }
 
-    chrome.storage.local.get(
-      state =>
-        state.hosts.forEach(({ url }) => createSocket(url))
-    )
+    createSocket()
 
     document.body.prepend(hiddenInputNode)
     document.body.prepend(hiddenButtonNode)

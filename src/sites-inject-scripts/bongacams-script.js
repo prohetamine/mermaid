@@ -112,13 +112,12 @@ document.addEventListener('readystatechange', async () => {
       }
     `
 
-    const createSocket = url => {
+    const createSocket = () => {
       const socket = io(
-        `${url}:6767?platform=BongaCams`,
+        `http://localhost:6767?platform=BongaCams`,
         {
-          options: {
-            reconnectionDelayMax: 10000
-          }
+          transports: ["websocket"],
+          reconnectionDelayMax: 10000
         }
       )
 
@@ -171,11 +170,8 @@ document.addEventListener('readystatechange', async () => {
       })
     }
 
-    chrome.storage.local.get(
-      state =>
-        state.hosts.forEach(({ url }) => createSocket(url))
-    )
-
+    createSocket()
+    
     document.body.appendChild(hiddenInputNode)
     document.body.appendChild(hiddenButtonNode)
     document.body.appendChild(hiddenScriptNode)
